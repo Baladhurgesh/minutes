@@ -21,6 +21,7 @@
 - **Who said what**: speaker diarization with NVIDIA Nemotron 3 Diarization (up to 8 speakers). Rename speakers and regenerate the notes with their names.
 - **Accurate transcripts** with word timestamps from NVIDIA Parakeet TDT 0.6B v3. Click any word to play from there; search the transcript.
 - **Meeting notes** written by Qwen3-0.6B: summary, key points, decisions, action items (with checkboxes) and open questions. Copy or export as Markdown.
+- **Download or delete** any meeting: save the recording as M4A (compact) or WAV (original), export notes and transcript as Markdown, or move the meeting to the Trash.
 - **Private by design**: audio, transcripts and notes stay in `~/Library/Application Support/Minutes`.
 
 ## Install

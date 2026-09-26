@@ -138,19 +138,27 @@ struct MeetingHeader: View {
                     .onTapGesture(count: 2, perform: beginEditing)
                     .help("Double-click to rename")
             }
-            FlowLayout(spacing: 6) {
-                MetaChip(systemImage: "calendar", text: meeting.createdAt.formatted(date: .abbreviated, time: .shortened))
-                if meeting.duration > 0 { MetaChip(systemImage: "clock", text: DurationFormat.short(meeting.duration)) }
-                if let n = speakerCount, n > 0 { MetaChip(systemImage: "person.2", text: n == 1 ? "1 speaker" : "\(n) speakers") }
-                MetaChip(systemImage: meeting.source == "recording" ? "mic" : "doc",
-                         text: meeting.source == "recording" ? "Recorded" : meeting.source)
-                if let p = meeting.profile { MetaChip(systemImage: "cpu", text: p) }
+            HStack(alignment: .top, spacing: 12) {
+                metadata
+                Spacer(minLength: 0)
+                HeaderActions(meeting: meeting)
             }
             StatusBanner(meeting: meeting)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.horizontal, 20)
         .padding(.vertical, 14)
+    }
+
+    private var metadata: some View {
+        FlowLayout(spacing: 6) {
+            MetaChip(systemImage: "calendar", text: meeting.createdAt.formatted(date: .abbreviated, time: .shortened))
+            if meeting.duration > 0 { MetaChip(systemImage: "clock", text: DurationFormat.short(meeting.duration)) }
+            if let n = speakerCount, n > 0 { MetaChip(systemImage: "person.2", text: n == 1 ? "1 speaker" : "\(n) speakers") }
+            MetaChip(systemImage: meeting.source == "recording" ? "mic" : "doc",
+                     text: meeting.source == "recording" ? "Recorded" : meeting.source)
+            if let p = meeting.profile { MetaChip(systemImage: "cpu", text: p) }
+        }
     }
 
     private func beginEditing() {
@@ -164,6 +172,35 @@ struct MeetingHeader: View {
         let t = title.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !t.isEmpty, t != meeting.title else { return }
         store.update(meeting.id) { $0.title = t; $0.autoTitle = false }
+    }
+}
+
+/// Download menu and delete button in the meeting header.
+struct HeaderActions: View {
+    let meeting: Meeting
+    @EnvironmentObject var model: AppModel
+
+    var body: some View {
+        HStack(spacing: 8) {
+            Menu {
+                DownloadMenuItems(meetingID: meeting.id)
+            } label: {
+                Label("Download", systemImage: "arrow.down.circle")
+            }
+            .menuStyle(.borderedButton)
+            .fixedSize()
+            .help("Download the recording or the notes")
+
+            Button(role: .destructive) {
+                model.requestDelete(meeting.id)
+            } label: {
+                Label("Delete", systemImage: "trash")
+            }
+            .labelStyle(.iconOnly)
+            .help("Move this meeting to the Trash")
+            .disabled(meeting.status == .recording)
+        }
+        .controlSize(.small)
     }
 }
 

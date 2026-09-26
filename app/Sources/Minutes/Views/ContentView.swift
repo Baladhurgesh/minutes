@@ -50,6 +50,19 @@ struct ContentView: View {
         .sheet(isPresented: $model.showModelSetup) {
             ModelSetupView()
         }
+        .confirmationDialog(
+            "Delete “\(model.pendingDelete.flatMap { store.meeting($0)?.title } ?? "meeting")”?",
+            isPresented: Binding(get: { model.pendingDelete != nil }, set: { if !$0 { model.pendingDelete = nil } }),
+            titleVisibility: .visible
+        ) {
+            Button("Move to Trash", role: .destructive) {
+                if let id = model.pendingDelete { model.delete(id) }
+                model.pendingDelete = nil
+            }
+            Button("Cancel", role: .cancel) { model.pendingDelete = nil }
+        } message: {
+            Text("The recording, transcript and notes move to the Trash. You can restore them from there.")
+        }
         .alert("Minutes", isPresented: Binding(get: { model.alertMessage != nil }, set: { if !$0 { model.alertMessage = nil } })) {
             Button("OK", role: .cancel) {}
         } message: {

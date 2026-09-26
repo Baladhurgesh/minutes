@@ -1,6 +1,26 @@
 import AppKit
+import AVFoundation
 import Foundation
 import SwiftUI
+import UniformTypeIdentifiers
+
+enum AudioExporter {
+    /// AAC in an M4A container: roughly a tenth of the size of the 16 kHz WAV.
+    static func exportM4A(from source: URL, to dest: URL) async throws {
+        let asset = AVURLAsset(url: source)
+        guard let session = AVAssetExportSession(asset: asset, presetName: AVAssetExportPresetAppleM4A) else {
+            throw MinutesError.audio("M4A export is not available")
+        }
+        if #available(macOS 15, *) {
+            try await session.export(to: dest, as: .m4a)
+        } else {
+            session.outputURL = dest
+            session.outputFileType = .m4a
+            await session.export()
+            if let error = session.error { throw error }
+        }
+    }
+}
 
 /// App-level state and actions shared by the window, menus and settings.
 @MainActor
@@ -100,15 +120,64 @@ final class AppModel: ObservableObject {
     }
 
     func exportMarkdown(_ id: UUID) {
-        guard let meeting = store.meeting(id) else { return }
-        let panel = NSSavePanel()
-        panel.allowedContentTypes = [.init(filenameExtension: "md") ?? .plainText]
-        panel.nameFieldStringValue = meeting.title.replacingOccurrences(of: "/", with: "-") + ".md"
-        guard panel.runModal() == .OK, let url = panel.url else { return }
+        guard let meeting = store.meeting(id),
+              let url = savePanel(named: meeting.title, ext: "md", type: .init(filenameExtension: "md") ?? .plainText)
+        else { return }
         do {
             try store.exportMarkdown(id).write(to: url, atomically: true, encoding: .utf8)
         } catch {
             alertMessage = error.localizedDescription
         }
+    }
+
+    enum RecordingFormat: String, CaseIterable {
+        case m4a, wav
+
+        var label: String { self == .m4a ? "Recording (M4A, smaller)" : "Recording (WAV, original)" }
+    }
+
+    func hasRecording(_ id: UUID) -> Bool {
+        guard let m = store.meeting(id), m.status != .recording, m.status != .importing else { return false }
+        return FileManager.default.fileExists(atPath: store.audioURL(id).path)
+    }
+
+    /// Saves the meeting audio where the user picks, as the original WAV or a compressed M4A.
+    func downloadRecording(_ id: UUID, format: RecordingFormat) {
+        guard let meeting = store.meeting(id), hasRecording(id),
+              let dest = savePanel(named: meeting.title, ext: format.rawValue, type: format == .m4a ? .mpeg4Audio : .wav)
+        else { return }
+        let source = store.audioURL(id)
+        Task {
+            do {
+                try? FileManager.default.removeItem(at: dest)
+                switch format {
+                case .wav:
+                    try FileManager.default.copyItem(at: source, to: dest)
+                case .m4a:
+                    try await AudioExporter.exportM4A(from: source, to: dest)
+                }
+                NSWorkspace.shared.activateFileViewerSelecting([dest])
+            } catch {
+                alertMessage = "Could not save the recording: \(error.localizedDescription)"
+            }
+        }
+    }
+
+    private func savePanel(named title: String, ext: String, type: UTType) -> URL? {
+        let panel = NSSavePanel()
+        panel.allowedContentTypes = [type]
+        panel.canCreateDirectories = true
+        panel.nameFieldStringValue = title.replacingOccurrences(of: "/", with: "-").replacingOccurrences(of: ":", with: "-") + "." + ext
+        return panel.runModal() == .OK ? panel.url : nil
+    }
+
+    // MARK: - Delete
+
+    /// Set to ask for confirmation before deleting (the dialog lives in ContentView).
+    @Published var pendingDelete: UUID?
+
+    func requestDelete(_ id: UUID) {
+        guard store.meeting(id)?.status != .recording else { return }
+        pendingDelete = id
     }
 }

@@ -121,8 +121,12 @@ final class MeetingStore: ObservableObject {
         objectWillChange.send()
     }
 
+    /// Moves the meeting folder (audio, transcript, notes) to the Trash so it can be restored.
     func delete(_ id: UUID) {
-        try? FileManager.default.removeItem(at: directory(for: id))
+        let dir = directory(for: id)
+        if (try? FileManager.default.trashItem(at: dir, resultingItemURL: nil)) == nil {
+            try? FileManager.default.removeItem(at: dir)
+        }
         meetings.removeAll { $0.id == id }
     }
 

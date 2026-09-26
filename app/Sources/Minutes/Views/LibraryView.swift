@@ -4,7 +4,6 @@ struct LibraryView: View {
     @EnvironmentObject var model: AppModel
     @EnvironmentObject var store: MeetingStore
     @State private var search = ""
-    @State private var pendingDelete: Meeting?
 
     private var sections: [(title: String, meetings: [Meeting])] {
         let q = search.trimmingCharacters(in: .whitespaces)
@@ -48,16 +47,7 @@ struct LibraryView: View {
         }
         .searchable(text: $search, placement: .sidebar, prompt: "Search meetings")
         .onDeleteCommand {
-            if let id = model.selection { pendingDelete = store.meeting(id) }
-        }
-        .confirmationDialog("Delete “\(pendingDelete?.title ?? "")”?", isPresented: Binding(
-            get: { pendingDelete != nil }, set: { if !$0 { pendingDelete = nil } }), titleVisibility: .visible) {
-            Button("Delete", role: .destructive) {
-                if let m = pendingDelete { model.delete(m.id) }
-                pendingDelete = nil
-            }
-        } message: {
-            Text("The recording, transcript and notes are removed from this Mac.")
+            if let id = model.selection { model.requestDelete(id) }
         }
         .safeAreaInset(edge: .bottom) { EngineStatusBar() }
     }
@@ -70,11 +60,30 @@ struct LibraryView: View {
         if meeting.status.isWorking {
             Button("Cancel Processing") { model.pipeline.cancel(meeting.id) }
         }
+        Menu("Download") {
+            DownloadMenuItems(meetingID: meeting.id)
+        }
         Button("Show in Finder") { model.revealInFinder(meeting.id) }
-        Button("Export Markdown...") { model.exportMarkdown(meeting.id) }
         Divider()
-        Button("Delete...", role: .destructive) { pendingDelete = meeting }
+        Button("Delete...", role: .destructive) { model.requestDelete(meeting.id) }
             .disabled(meeting.status == .recording)
+    }
+}
+
+/// Recording (M4A / WAV) and notes downloads, shared by the header button and the context menu.
+struct DownloadMenuItems: View {
+    let meetingID: UUID
+    @EnvironmentObject var model: AppModel
+    @EnvironmentObject var store: MeetingStore
+
+    var body: some View {
+        ForEach(AppModel.RecordingFormat.allCases, id: \.self) { format in
+            Button(format.label) { model.downloadRecording(meetingID, format: format) }
+                .disabled(!model.hasRecording(meetingID))
+        }
+        Divider()
+        Button("Notes and Transcript (Markdown)") { model.exportMarkdown(meetingID) }
+            .disabled(store.notes(meetingID) == nil && store.transcript(meetingID) == nil)
     }
 }
 
