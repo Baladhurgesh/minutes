@@ -65,6 +65,11 @@ final class AppModel: ObservableObject {
         _ = try? await engine.ensureReady()
     }
 
+    /// Shows the home (welcome) screen by clearing the meeting selection.
+    func goHome() {
+        selection = nil
+    }
+
     func toggleRecording() async {
         if recorder.isRecording { await stopRecording() } else { await startRecording() }
     }

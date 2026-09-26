@@ -21,6 +21,15 @@ struct ContentView: View {
             .navigationTitle("")
         }
         .toolbar {
+            ToolbarItem(placement: .navigation) {
+                Button {
+                    model.goHome()
+                } label: {
+                    Label("Home", systemImage: "house")
+                }
+                .help("Go to the home screen (⇧⌘H)")
+                .disabled(model.selection == nil)
+            }
             ToolbarItemGroup(placement: .primaryAction) {
                 Button {
                     model.showImporter = true

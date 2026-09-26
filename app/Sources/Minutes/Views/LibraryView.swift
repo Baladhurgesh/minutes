@@ -27,6 +27,7 @@ struct LibraryView: View {
 
     var body: some View {
         List(selection: $model.selection) {
+            HomeRow()
             ForEach(sections, id: \.title) { section in
                 Section(section.title) {
                     ForEach(section.meetings) { meeting in
@@ -72,6 +73,37 @@ struct LibraryView: View {
         Divider()
         Button("Delete...", role: .destructive) { model.requestDelete(meeting.id) }
             .disabled(meeting.status == .recording)
+    }
+}
+
+/// First sidebar row: returns to the home (welcome) screen. Highlighted while no meeting is selected.
+private struct HomeRow: View {
+    @EnvironmentObject var model: AppModel
+
+    private var isHome: Bool { model.selection == nil }
+
+    var body: some View {
+        Button {
+            model.goHome()
+        } label: {
+            HStack(spacing: 10) {
+                Image(systemName: "house.fill")
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundStyle(isHome ? Color.white : Color.accentColor)
+                    .frame(width: 30, height: 30)
+                    .background(isHome ? AnyShapeStyle(Brand.gradient) : AnyShapeStyle(Color.accentColor.opacity(0.12)),
+                                in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+                Text("Home").font(.body.weight(.medium))
+                Spacer()
+            }
+            .padding(.vertical, 4)
+            .padding(.horizontal, 6)
+            .background(isHome ? Color.primary.opacity(0.08) : .clear, in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .listRowInsets(EdgeInsets(top: 2, leading: 4, bottom: 6, trailing: 4))
+        .help("Go to the home screen (⇧⌘H)")
     }
 }
 

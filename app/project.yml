@@ -35,8 +35,8 @@ targets:
       path: Sources/Minutes/Info.plist
       properties:
         CFBundleDisplayName: Minutes
-        CFBundleShortVersionString: "0.1.2"
-        CFBundleVersion: "3"
+        CFBundleShortVersionString: "0.1.3"
+        CFBundleVersion: "4"
         LSApplicationCategoryType: public.app-category.productivity
         LSMinimumSystemVersion: "14.0"
         NSMicrophoneUsageDescription: Minutes records your microphone to transcribe meetings locally on this Mac.

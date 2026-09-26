@@ -31,6 +31,10 @@ struct MinutesApp: App {
                 Button("Upload Recording (MP3, M4A, WAV, Video)...") { model.showImporter = true }
                     .keyboardShortcut("o")
             }
+            CommandMenu("Go") {
+                Button("Home") { model.goHome() }
+                    .keyboardShortcut("h", modifiers: [.command, .shift])
+            }
         }
 
         Settings {
