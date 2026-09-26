@@ -1,0 +1,19 @@
+.DS_Store
+__pycache__/
+*.pyc
+.venv/
+.pytest_cache/
+.ruff_cache/
+
+# Xcode / XcodeGen output
+app/Minutes.xcodeproj/
+app/build/
+DerivedData/
+*.xcuserstate
+xcuserdata/
+
+# Build artifacts
+dist/
+build/
+samples/*.wav
+!samples/README.md

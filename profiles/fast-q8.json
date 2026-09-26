@@ -1,0 +1,11 @@
+{
+  "name": "fast-q8",
+  "description": "Qwen3-0.6B quantized to 8-bit in memory (embeddings and lm_head kept bf16); smaller and faster notes",
+  "llm": {
+    "model": "Qwen/Qwen3-0.6B",
+    "config": {"bits": 8, "group_size": 64, "keep_high": ["embed_tokens", "lm_head"], "kv_bits": null, "prefill_step_size": 2048},
+    "kernels": {}
+  },
+  "asr": {"model": "mlx-community/parakeet-tdt-0.6b-v3", "dtype": "bfloat16", "chunk_duration": 120},
+  "diarization": {"backend": "fluidaudio-nemotron3", "preset": "fast128", "threshold": 0.5}
+}

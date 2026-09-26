@@ -1,0 +1,11 @@
+{
+  "name": "default",
+  "description": "Stock models: Parakeet TDT 0.6b v3 (bf16), Qwen3-0.6B (bf16), Nemotron 3 Diarization fast128 preset",
+  "llm": {
+    "model": "Qwen/Qwen3-0.6B",
+    "config": {"bits": null, "group_size": 64, "keep_high": [], "kv_bits": null, "prefill_step_size": 2048},
+    "kernels": {}
+  },
+  "asr": {"model": "mlx-community/parakeet-tdt-0.6b-v3", "dtype": "bfloat16", "chunk_duration": 120},
+  "diarization": {"backend": "fluidaudio-nemotron3", "preset": "fast128", "threshold": 0.5}
+}
