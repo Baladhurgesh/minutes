@@ -39,8 +39,13 @@ struct LibraryView: View {
         }
         .overlay {
             if store.meetings.isEmpty {
-                ContentUnavailableView("No meetings yet", systemImage: "waveform",
-                                       description: Text("Recordings and imports appear here."))
+                ContentUnavailableView {
+                    Label("No meetings yet", systemImage: "waveform")
+                } description: {
+                    Text("Record a meeting or upload an MP3, M4A or WAV file.")
+                } actions: {
+                    Button("Upload Recording...") { model.showImporter = true }
+                }
             } else if sections.isEmpty {
                 ContentUnavailableView.search(text: search)
             }

@@ -25,13 +25,14 @@ struct ContentView: View {
                 Button {
                     model.showImporter = true
                 } label: {
-                    Label("Import", systemImage: "square.and.arrow.down")
+                    Label("Upload", systemImage: "arrow.up.doc")
+                        .labelStyle(.titleAndIcon)
                 }
-                .help("Import an audio or video file (⌘O)")
+                .help("Upload an MP3, M4A, WAV or video file (⌘O)")
                 RecordButton()
             }
         }
-        .fileImporter(isPresented: $model.showImporter, allowedContentTypes: [.audio, .movie, .audiovisualContent],
+        .fileImporter(isPresented: $model.showImporter, allowedContentTypes: AppModel.uploadTypes,
                       allowsMultipleSelection: true) { result in
             if case .success(let urls) = result { model.importFiles(urls) }
         }
@@ -108,7 +109,7 @@ struct WelcomeView: View {
                         .frame(width: 88, height: 88)
                         .shadow(color: .blue.opacity(0.25), radius: 12, y: 6)
                     Text("Welcome to Minutes").font(.system(size: 28, weight: .bold))
-                    Text("Record or import a meeting to get a transcript with speakers and clear notes.")
+                    Text("Record or upload a meeting to get a transcript with speakers and clear notes.")
                         .font(.title3)
                         .foregroundStyle(.secondary)
                         .multilineTextAlignment(.center)
@@ -118,8 +119,8 @@ struct WelcomeView: View {
                                systemImage: "record.circle.fill", tint: .red, shortcut: "⇧⌘R") {
                         Task { await model.startRecording() }
                     }
-                    ActionCard(title: "Import a file", subtitle: "Audio or video: MP3, M4A, WAV, MP4, MOV and more. Or drop it here.",
-                               systemImage: "square.and.arrow.down.fill", tint: .accentColor, shortcut: "⌘O") {
+                    ActionCard(title: "Upload a recording", subtitle: "MP3, M4A, WAV, AAC, FLAC, OGG, or video (MP4, MOV). Or drop files here.",
+                               systemImage: "arrow.up.doc.fill", tint: .accentColor, shortcut: "⌘O") {
                         model.showImporter = true
                     }
                 }
@@ -175,7 +176,7 @@ private struct DropOverlay: View {
                 .fill(Color.accentColor.opacity(0.08))
             RoundedRectangle(cornerRadius: 16, style: .continuous)
                 .strokeBorder(Color.accentColor, style: StrokeStyle(lineWidth: 2.5, dash: [9, 6]))
-            Label("Drop to import", systemImage: "square.and.arrow.down")
+            Label("Drop to upload", systemImage: "arrow.up.doc")
                 .font(.title2.weight(.semibold))
                 .foregroundStyle(Color.accentColor)
         }

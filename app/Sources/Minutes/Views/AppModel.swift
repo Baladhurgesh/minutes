@@ -29,6 +29,12 @@ final class AppModel: ObservableObject {
     static let inputDeviceKey = "inputDeviceUID"
     static let modelsPreparedKey = "modelsPrepared"
 
+    /// Listed explicitly so MP3 and friends are selectable even when their UTI does not resolve to `.audio`.
+    static let uploadTypes: [UTType] = [.mp3, .mpeg4Audio, .wav, .aiff, .audio, .movie, .mpeg4Movie, .quickTimeMovie]
+        + ["m4a", "aac", "flac", "caf", "ogg", "opus"].compactMap { UTType(filenameExtension: $0) }
+    /// Recognised as media by macOS, but AVFoundation cannot decode them.
+    static let unsupportedExtensions: Set<String> = ["webm", "mkv", "wma", "wmv", "avi"]
+
     let store = MeetingStore()
     let engine = EngineManager()
     let recorder = Recorder()
@@ -98,11 +104,24 @@ final class AppModel: ObservableObject {
     }
 
     func importFiles(_ urls: [URL]) {
-        for url in urls {
+        let media = urls.filter(Self.isMedia)
+        let skipped = urls.filter { !Self.isMedia($0) }.map(\.lastPathComponent)
+        if !skipped.isEmpty {
+            alertMessage = "Can't upload \(skipped.joined(separator: ", ")). "
+                + "Minutes accepts MP3, M4A, WAV, AAC, FLAC, OGG and MP4 or MOV videos."
+        }
+        for url in media {
             Task {
                 if let id = await pipeline.importFile(url) { selection = id }
             }
         }
+    }
+
+    static func isMedia(_ url: URL) -> Bool {
+        let ext = url.pathExtension.lowercased()
+        guard !unsupportedExtensions.contains(ext), let type = UTType(filenameExtension: ext) else { return false }
+        return type.conforms(to: .audio) || type.conforms(to: .movie) || type.conforms(to: .audiovisualContent)
+            || uploadTypes.contains(type)
     }
 
     func delete(_ id: UUID) {

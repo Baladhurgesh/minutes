@@ -28,7 +28,7 @@ struct MinutesApp: App {
                     Task { await model.toggleRecording() }
                 }
                 .keyboardShortcut("r", modifiers: [.command, .shift])
-                Button("Import Audio or Video...") { model.showImporter = true }
+                Button("Upload Recording (MP3, M4A, WAV, Video)...") { model.showImporter = true }
                     .keyboardShortcut("o")
             }
         }

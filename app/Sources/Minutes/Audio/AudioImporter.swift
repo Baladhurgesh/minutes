@@ -5,13 +5,16 @@ import Foundation
 enum AudioImporter {
     static let sampleRate = 16000
 
-    static let supportedExtensions = ["wav", "mp3", "m4a", "aac", "aiff", "aif", "caf", "flac", "mp4", "mov", "m4v"]
-
     /// Returns the duration in seconds of the written WAV.
     @discardableResult
     static func convert(_ source: URL, to destination: URL, progress: ((Double) -> Void)? = nil) async throws -> Double {
         let asset = AVURLAsset(url: source)
-        let tracks = try await asset.loadTracks(withMediaType: .audio)
+        let tracks: [AVAssetTrack]
+        do {
+            tracks = try await asset.loadTracks(withMediaType: .audio)
+        } catch {
+            throw MinutesError.audio("\(source.lastPathComponent) can't be read on this Mac. Convert it to MP3 or M4A and upload again.")
+        }
         guard !tracks.isEmpty else { throw MinutesError.audio("\(source.lastPathComponent) has no audio track") }
         let total = try await asset.load(.duration).seconds
 
